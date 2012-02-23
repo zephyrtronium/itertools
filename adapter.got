@@ -1,0 +1,56 @@
+/*
+This is free software. It comes without any warranty, to the extent permitted
+by applicable law. You can redistribute it and/or modify it under the terms of
+the Do What The Fuck You Want To Public License, Version 2, as published by
+Sam Hocevar. See COPYING for more details.
+*/
+
+package itertools
+
+// IMPORTANT: adapter.go is generated from adapter.got. Change the latter.
+
+// AdaptString turns a string into a rune iterator.
+func AdaptString(s string) <-chan rune {
+	ch := make(chan rune, 1)
+	go func() {
+		for _, r := range s {
+			ch <- r
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{range $t := $.generic}}
+// Adapt{{if $t.n}}{{$t.n}}s{{else}}Any{{end}} returns an iterator over the
+// values of s.
+func Adapt{{if $t.n}}{{$t.n}}s{{else}}Any{{end}}(s []{{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for _, v := range s {
+			ch <- v
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}
+
+// GenerateString turns a rune iterator into a string.
+func GenerateString(ch <-chan rune) string {
+	s := make([]rune, 0, 32)
+	for r := range ch {
+		s = append(s, r)
+	}
+	return string(s)
+}
+{{range $t := $.generic}}
+// Generate{{if $t.n}}{{$t.n}}s{{else}}Any{{end}} turns an iterator of {{$t.t}}
+// into a []{{$t.t}}.
+func Generate{{if $t.n}}{{$t.n}}s{{else}}Any{{end}}(ch <-chan {{$t.t}}) []{{$t.t}} {
+	s := make([]{{$t.t}}, 0, 32)
+	for v := range ch {
+		s = append(s, v)
+	}
+	return s
+}
+{{end}}

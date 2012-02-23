@@ -1,0 +1,174 @@
+/*
+This is free software. It comes without any warranty, to the extent permitted
+by applicable law. You can redistribute it and/or modify it under the terms of
+the Do What The Fuck You Want To Public License, Version 2, as published by
+Sam Hocevar. See COPYING for more details.
+*/
+
+package itertools
+
+// IMPORTANT: terminating.go is generated from terminating.got. Change the latter.
+
+{{range $t := $.generic}}
+type {{$t.n}}Predicate func(v {{$t.t}}) bool
+{{end}}
+
+{{range $t := $.numeric}}
+// Accumulate{{$t.n}} returns an iterator that yields accumulated sums of its
+// input iterator's values.
+func Accumulate{{$t.n}}(it <-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		sum := <-it
+		ch <- sum
+		for i := range it {
+			sum += i
+			ch <- sum
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Chain{{$t.n}} returns an iterator that yields values from its arguments in
+// order.
+func Chain{{$t.n}}(p ...<-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for _, s := range p {
+			for i := range s {
+				ch <- i
+			}
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Compress{{$t.n}} returns an iterator that yields each item from its first
+// argument for which the corresponding item in the second argument is true.
+func Compress{{$t.n}}(p <-chan {{$t.t}}, s <-chan bool) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for v := range p {
+			b, ok := <-s
+			if !ok {
+				break
+			}
+			if b {
+				ch <- v
+			}
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Drop{{$t.n}} consumes values from s while pred(<-s) returns true.
+func Drop{{$t.n}}(pred {{$t.n}}Predicate, s <-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for {
+			if v, ok := <-s; !ok {
+				break
+			} else if !pred(v) {
+				ch <- v
+				for i := range s {
+					ch <- i
+				}
+				break
+			}
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Filter{{$t.n}} returns an iterator over values from s for which pred(v)
+// returns true.
+func Filter{{$t.n}}(pred {{$t.n}}Predicate, s <-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for v := range s {
+			if pred(v) {
+				ch <- v
+			}
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Map{{$t.n}} returns an iterator over the values of f(v) for each v in s.
+func Map{{$t.n}}(f func(v {{$t.t}}) {{$t.t}}, s <-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for v := range s {
+			ch <- f(v)
+		}
+		close(ch)
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Take{{$t.n}} returns an iterator over the values of s until pred(s) returns
+// false.
+func Take{{$t.n}}(pred {{$t.n}}Predicate, s <-chan {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for v := range s {
+			if !pred(v) {
+				close(ch)
+				return
+			}
+			ch <- v
+		}
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Tee{{$t.n}} returns n iterators over the values of s, each of which receives
+// each item of s.
+func Tee{{$t.n}}(s <-chan {{$t.t}}, n int) []<-chan {{$t.t}} {
+	chs := make([]chan {{$t.t}}, n)
+	for i := range chs {
+		chs[i] = make(chan {{$t.t}}, 8)
+	}
+	go func() {
+		for v := range s {
+			for _, ch := range chs {
+				ch <- v{{/*TODO: prevent tee from blocking*/}}
+			}
+		}
+		for _, ch := range chs {
+			close(ch)
+		}
+	}()
+	ret := make([]<-chan {{$t.t}}, n)
+	for i := range ret {
+		ret[i] = chs[i]
+	}
+	return ret
+}
+{{end}}{{range $t := $.generic}}
+// Zip{{$t.n}} returns an iterator over each nth value of each of its
+// arguments.
+func Zip{{$t.n}}(p ...<-chan {{$t.t}}) <-chan []{{$t.t}} {
+	ch := make(chan []{{$t.t}}, 1)
+	go func() {
+		var ok bool
+		for {
+			m := make([]{{$t.t}}, len(p))
+			for i, s := range p {
+				m[i], ok = <-s
+				if !ok {
+					close(ch)
+					return
+				}
+			}
+			ch <- m
+		}
+	}()
+	return ch
+}
+{{end}}

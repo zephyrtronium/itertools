@@ -1,0 +1,105 @@
+/*
+This is free software. It comes without any warranty, to the extent permitted
+by applicable law. You can redistribute it and/or modify it under the terms of
+the Do What The Fuck You Want To Public License, Version 2, as published by
+Sam Hocevar. See COPYING for more details.
+*/
+
+package itertools
+
+// IMPORTANT: infinite.go is generated from infinite.got. Change the latter.
+{{range $t := $.count.type}}{{range $m := $.count.method}}
+// Count{{$m}}{{$t.n}} creates an iterator of type {{$t.t}} that starts at
+// {{if $m}}start and increments by step{{else}}0 and increments by 1{{end}}.
+func Count{{$m}}{{$t.n}}({{if $m}}start, step {{$t.t}}{{end}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		{{if not $m}}var x {{$t.t}}{{end}}
+		for ;; {{if $m}}start += step{{else}}x++{{end}} {
+			ch <- {{if not $m}}x{{else}}start{{end}}
+		}
+	}()
+	return ch
+}
+{{end}}{{end}}{{range $t := $.count.type}}
+// Range{{$t.n}} creates an iterator of type {{$t.t}} that starts at start,
+// increments by step, and stops when the value becomes greater than or equal
+// to stop. If step is 0, return nil.
+func Range{{$t.n}}(start, step, stop {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	if step > 0 {
+		go func() {
+			for ; start < stop; start += step {
+				ch <- start
+			}
+			close(ch)
+		}()
+	} else if step < 0 {
+		go func() {
+			for ; start > stop; start += step {
+				ch <- start
+			}
+			close(ch)
+		}()
+	} else {
+		return nil
+	}
+	return ch
+}
+{{end}}
+// CycleRune creates an infinitely cycling iterator over a string yielding its
+// runes.
+func CycleRune(s string) <-chan rune {
+	ch := make(chan rune, 1)
+	r := []rune(s)
+	go func() {
+		i := 0
+		for {
+			ch <- r[i]
+			if i == len(r) - 1 {
+				i = 0
+			} else {
+				i++
+			}
+		}
+	}()
+	return ch
+}
+{{range $t := $.generic}}
+// Cycle{{$t.n}} creates an infinitely cycling iterator over a slice of
+// {{$t.t}}s. {{if $t.n}}See Cycle for more information.{{else}}The argument is
+// not copied, so it never will be garbage-collected, and modifications to it
+// will be apparent in the iterator.{{end}}
+func Cycle{{$t.n}}(s []{{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for i := 0;; i++ {
+			ch <- s[i%len(s)]
+		}
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Repeat{{$t.n}} returns an iterator that yields an infinitude of its
+// argument.
+func Repeat{{$t.n}}(v {{$t.t}}) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for {
+			ch <- v
+		}
+	}()
+	return ch
+}
+{{end}}{{range $t := $.generic}}
+// Repeat{{$t.n}}N returns an iterator that yields its argument n times.
+func Repeat{{$t.n}}N(v {{$t.t}}, n int) <-chan {{$t.t}} {
+	ch := make(chan {{$t.t}}, 1)
+	go func() {
+		for i := 0; i < n; i++ {
+			ch <- v
+		}
+	}()
+	return ch
+}
+{{end}}

@@ -1,0 +1,55 @@
+{
+	"generic": [
+		{"t": "string", "n": "String"},
+
+		{"t": "uint8",  "n": "Byte"  },
+		{"t": "uint16", "n": "Uint16"},
+		{"t": "uint32", "n": "Uint32"},
+		{"t": "uint64", "n": "Uint64"},
+
+		{"t": "int8",  "n": "Int8" },
+		{"t": "int16", "n": "Int16"},
+		{"t": "int32", "n": "Int32"},
+		{"t": "int64", "n": "Int64"},
+
+		{"t": "float32", "n": "Float32"},
+		{"t": "float64", "n": "Float64"},
+
+		{"t": "complex64",  "n": "Complex64" },
+		{"t": "complex128", "n": "Complex128"},
+
+		{"t": "uint",    "n": "Uint"},
+		{"t": "int",     "n": "Int" },
+		{"t": "uintptr", "n": "Ptr" },
+		
+		{"t": "bool", "n": "Bool"},
+
+		{"t": "interface{}", "n": ""},
+	],
+	
+	"numeric": [
+		{"t": "uint8",  "n": "Uint8" },
+		{"t": "uint16", "n": "Uint16"},
+		{"t": "uint32", "n": "Uint32"},
+		{"t": "uint64", "n": "Uint64"},
+
+		{"t": "int8",  "n": "Int8" },
+		{"t": "int16", "n": "Int16"},
+		{"t": "int32", "n": "Int32"},
+		{"t": "int64", "n": "Int64"},
+
+		{"t": "float32", "n": "Float32"},
+		{"t": "float64", "n": "Float64"},
+
+		{"t": "complex64",  "n": "Complex64" },
+		{"t": "complex128", "n": "Complex128"},
+
+		{"t": "uint", "n": "Uint"},
+		{"t": "int",  "n": ""    },
+	],
+
+	"count": {
+		"type": [{"t": "int", "n": ""}, {"t": "uint64", "n": "64"}],
+		"method": ["", "StartStep"]
+	},
+}
